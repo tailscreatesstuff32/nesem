@@ -1,22 +1,22 @@
-IDIR=../include
-CC=cc
-CFLAGS=-I$(IDIR) -O3 -fomit-frame-pointer
+CC      := gcc
+CFLAGS  := -MMD -O2 -I./include -Wall -Werror
+LDFLAGS := -lallegro -lallegro_main -lallegro_primitives
 
-ODIR=obj
+CFILES  := $(shell find src -name "*.c")
+OBJS    := $(CFILES:src/%.c=build/%.o)
 
-_DEPS=emulator.h
-DEPS=$(pathsubst %,$(IDIR)/%,$(_DEPS))
+build/%.o: src/%.c
+	@echo + CC $< "/>" $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -c -o $@ $<
 
-_OBJ=emulator.o
-OBJ=$(pathsubst %,$(ODIR)/%,$(_OBJ))
+nesem: $(OBJS)
+	@echo + LD "->" $@
+	@$(CC) $(OBJS) $(LDFLAGS) -o nesem
 
-$(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-emulator: $(OBJ)
-	$(CC) -c -o $@ $^ $(FLAGS)
+-include $(pathsubst %.o, %.d, $(OBJS))
 
 .PHONY: clean
 
 clean:
-	rm -rf $(ODIR)/*.o *- core $(INCDIR)/*-
+	rm -rf nesem build/
